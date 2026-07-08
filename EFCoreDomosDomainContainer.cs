@@ -192,35 +192,23 @@ namespace Grammophone.Domos.DataAccess.EntityFrameworkCore
 			#region FundsTransferRequestGroup
 
 			modelBuilder.Entity<FundsTransferRequestGroup>()
-				.OwnsOne(ftrg => ftrg.EncryptedBankAccountInfo, bankingInfo =>
-				{
-					bankingInfo.Property(info => info.EncryptedAccountNumber)
-						.HasColumnName(nameof(EncryptedBankAccountInfo.EncryptedAccountNumber));
+				.OwnsOne(ftrg => ftrg.EncryptedBankAccountInfo);
 
-					bankingInfo.Property(info => info.EncryptedTransitNumber)
-						.HasColumnName(nameof(EncryptedBankAccountInfo.EncryptedTransitNumber));
-
-					bankingInfo.Property(info => info.Type)
-						.HasColumnName(nameof(EncryptedBankAccountInfo.Type));
-
-					bankingInfo.Property(info => info.BankNumber)
-						.HasColumnName(nameof(EncryptedBankAccountInfo.BankNumber));
-
-					bankingInfo.Property(info => info.AccountCode)
-						.HasColumnName(nameof(EncryptedBankAccountInfo.AccountCode));
-				});
-
-			modelBuilder.Entity<FundsTransferRequestGroup>()
-				.HasIndex(
-					$"{nameof(FundsTransferRequestGroup.EncryptedBankAccountInfo)}_{nameof(EncryptedBankAccountInfo.EncryptedAccountNumber)}",
-					$"{nameof(FundsTransferRequestGroup.EncryptedBankAccountInfo)}_{nameof(EncryptedBankAccountInfo.EncryptedTransitNumber)}",
-					$"{nameof(FundsTransferRequestGroup.EncryptedBankAccountInfo)}_{nameof(EncryptedBankAccountInfo.Type)}",
-					$"{nameof(FundsTransferRequestGroup.EncryptedBankAccountInfo)}_{nameof(EncryptedBankAccountInfo.BankNumber)}",
-					$"{nameof(FundsTransferRequestGroup.EncryptedBankAccountInfo)}_{nameof(EncryptedBankAccountInfo.AccountCode)}",
-					nameof(FundsTransferRequestGroup.AccountHolderName),
-					nameof(FundsTransferRequestGroup.AccountHolderToken),
-					nameof(FundsTransferRequestGroup.EffectiveDate))
-				.HasDatabaseName("IX_FundsTransferRequestGroup_EncryptedBankingInfo_AccountHolder");
+			// Composite index (including owner properties)
+			/* The following has no way to work in EF Core. Make a migration to add it */
+			//modelBuilder.Entity<FundsTransferRequestGroup>()
+			//	.HasIndex(new string[]
+			//	{
+			//		"EncryptedBankAccountInfo_EncryptedAccountNumber",   // Use the actual column name
+			//		"EncryptedBankAccountInfo_EncryptedTransitNumber",
+			//		"EncryptedBankAccountInfo_Type",
+			//		"EncryptedBankAccountInfo_BankNumber",
+			//		"EncryptedBankAccountInfo_AccountCode",
+			//		"AccountHolderName",
+			//		"AccountHolderToken",
+			//		"EffectiveDate"
+			//	})
+			//	.HasDatabaseName("IX_FundsTransferRequestGroup_EncryptedBankingInfo_AccountHolder");
 
 			#endregion
 

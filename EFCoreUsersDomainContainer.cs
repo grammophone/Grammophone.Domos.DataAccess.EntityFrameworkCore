@@ -128,6 +128,18 @@ namespace Grammophone.Domos.DataAccess.EntityFrameworkCore
 
 			#endregion
 
+			#region Dispositions
+
+			modelBuilder.Entity<Disposition>()
+				.HasOne(d => d.CreatorUser)
+				.WithMany();
+
+			modelBuilder.Entity<Disposition>()
+				.HasOne(d => d.LastModifierUser)
+				.WithMany();
+
+			#endregion
+
 			#region Registration
 
 			modelBuilder.Entity<Registration>()
