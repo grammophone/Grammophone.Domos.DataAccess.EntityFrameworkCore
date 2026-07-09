@@ -94,35 +94,6 @@ namespace Grammophone.Domos.DataAccess.EntityFrameworkCore
 		#region Protected methods
 
 		/// <summary>
-		/// EF Core has almost no implicit Code First conventions for inheritance.
-		/// For any abstract entity type that is exposed via DbSet&lt;T&gt; (or queried directly)
-		/// and has concrete derived types, we must explicitly configure TPH using the legacy
-		/// "Discriminator" column (string) with values = the concrete CLR simple type names.
-		/// This matches EF6 behavior and all existing schema + seed/migration data.
-		///
-		/// Call this once early in OnModelCreating. It is idempotent (skips hierarchies
-		/// that already have a discriminator configured).
-		/// </summary>
-		protected static void ConfigureDefaultHierarchies(ModelBuilder modelBuilder)
-		{
-			if (modelBuilder == null) throw new ArgumentNullException(nameof(modelBuilder));
-
-			// Force all concrete derived types for abstract roots into the model first.
-			// EF Core does not auto-discover them from a DbSet<Abstract> + derived classes in other assemblies/types.
-			var knownEntityTypes = modelBuilder.Model.GetEntityTypes()
-				.Select(et => et.ClrType)
-				.ToList();
-
-			foreach (var entityType in knownEntityTypes)
-			{
-				foreach (var concreteDerivedEntityType in FindAllConcreteDerivedTypes(entityType))
-				{
-					modelBuilder.Entity(concreteDerivedEntityType);
-				}
-			}
-		}
-
-		/// <summary>
 		/// Scans the model for all entities exposing CreatorUser / LastModifierUser navigation properties
 		/// (from <see cref="TrackingEntity{U}"/>, <see cref="UserTrackingEntity{U}"/>, <see cref="Disposition"/> etc.) and configures the
 		/// one-sided relationships. This replaces hundreds of manual HasOne lines that EF Core does not infer.
