@@ -1,3 +1,6 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using Grammophone.DataAccess;
 using Grammophone.DataAccess.EntityFrameworkCore;
 using Grammophone.Domos.Domain;
@@ -90,10 +93,91 @@ namespace Grammophone.Domos.DataAccess.EntityFrameworkCore
 
 		#region Protected methods
 
+		/// <summary>
+		/// EF Core has almost no implicit Code First conventions for inheritance.
+		/// For any abstract entity type that is exposed via DbSet&lt;T&gt; (or queried directly)
+		/// and has concrete derived types, we must explicitly configure TPH using the legacy
+		/// "Discriminator" column (string) with values = the concrete CLR simple type names.
+		/// This matches EF6 behavior and all existing schema + seed/migration data.
+		///
+		/// Call this once early in OnModelCreating. It is idempotent (skips hierarchies
+		/// that already have a discriminator configured).
+		/// </summary>
+		protected static void ConfigureDefaultHierarchies(ModelBuilder modelBuilder)
+		{
+			if (modelBuilder == null) throw new ArgumentNullException(nameof(modelBuilder));
+
+			// Force all concrete derived types for abstract roots into the model first.
+			// EF Core does not auto-discover them from a DbSet<Abstract> + derived classes in other assemblies/types.
+			var knownEntityTypes = modelBuilder.Model.GetEntityTypes()
+				.Select(et => et.ClrType)
+				.ToList();
+
+			foreach (var entityType in knownEntityTypes)
+			{
+				foreach (var concreteDerivedEntityType in FindAllConcreteDerivedTypes(entityType))
+				{
+					modelBuilder.Entity(concreteDerivedEntityType);
+				}
+			}
+		}
+
+		/// <summary>
+		/// Scans the model for all entities exposing CreatorUser / LastModifierUser navigation properties
+		/// (from <see cref="TrackingEntity{U}"/>, <see cref="UserTrackingEntity{U}"/>, <see cref="Disposition"/> etc.) and configures the
+		/// one-sided relationships. This replaces hundreds of manual HasOne lines that EF Core does not infer.
+		/// Call this early in OnModelCreating (after base.OnModelCreating) so that later global
+		/// SetDefaultDeleteBehavior can adjust any cascades.
+		/// </summary>
+		/// <typeparam name="TU">The type parameter for finding <see cref="ITrackingEntity{TU}"/> and <see cref="IUserTrackingEntity{TU}"/> implmenetatoins.</typeparam>
+		protected static void ConfigureAllTrackingEntitiesNavigations<TU>(ModelBuilder modelBuilder)
+			where TU : User
+		{
+			if (modelBuilder == null) throw new ArgumentNullException(nameof(modelBuilder));
+
+			foreach (var entityType in modelBuilder.Model.GetEntityTypes())
+			{
+				var clrType = entityType.ClrType;
+				if (clrType == null) continue;
+
+				// Only configure for concrete mapped types.
+				if (clrType.IsAbstract) continue;
+
+				if (!typeof(ITrackingEntity<TU>).IsAssignableFrom(clrType)) continue;
+
+				// Look for the navigation properties declared on Tracking* base classes.
+				// If CreatorUser navigation exists and is not yet backed by a relationship, configure it.
+				modelBuilder.Entity(clrType)
+					.HasOne(nameof(ITrackingEntity<TU>.CreatorUser))
+					.WithMany();
+
+				entityType.FindNavigation(nameof(ITrackingEntity<TU>.CreatorUser)).SetPropertyAccessMode(PropertyAccessMode.Property);
+
+				// Same for LastModifierUser.
+				modelBuilder.Entity(clrType)
+					.HasOne(nameof(ITrackingEntity<TU>.LastModifierUser))
+					.WithMany();
+
+				entityType.FindNavigation(nameof(ITrackingEntity<TU>.LastModifierUser)).SetPropertyAccessMode(PropertyAccessMode.Property);
+
+				// Do the same for IUserTrackingEntity<U>, if implemented.
+				if (typeof(IUserTrackingEntity<TU>).IsAssignableFrom(clrType))
+				{
+					modelBuilder.Entity(clrType)
+						.HasOne(nameof(IUserTrackingEntity<TU>.OwningUser))
+						.WithMany();
+
+					entityType.FindNavigation(nameof(IUserTrackingEntity<TU>.OwningUser)).SetPropertyAccessMode(PropertyAccessMode.Property);
+				}
+			}
+		}
+
 		/// <inheritdoc/>
 		protected override void OnModelCreating(ModelBuilder modelBuilder)
 		{
 			base.OnModelCreating(modelBuilder);
+
+			modelBuilder.UsePropertyAccessMode(PropertyAccessMode.Property);
 
 			#region User
 
@@ -215,6 +299,44 @@ namespace Grammophone.Domos.DataAccess.EntityFrameworkCore
 				.HasIndex(bs => new { bs.UserID, bs.FirstSignInOn });
 
 			#endregion
+		}
+
+		#endregion
+
+		#region Private methods
+
+		/// <summary>
+		/// Returns every concrete (non-abstract) type that derives from the given base type.
+		/// We first scan the assembly that defines the abstract type (most reliable),
+		/// then fall back to other loaded assemblies. This is required because EF Core
+		/// will not automatically discover derived entity types referenced only via DbSet&lt;Abstract&gt;.
+		/// </summary>
+		private static IEnumerable<Type> FindAllConcreteDerivedTypes(Type baseType)
+		{
+			if (baseType == null) yield break;
+
+			// Primary: the assembly that actually declares the abstract base (guaranteed loaded)
+			foreach (var t in baseType.Assembly.GetTypes())
+			{
+				if (t.IsClass && !t.IsAbstract && baseType.IsAssignableFrom(t))
+					yield return t;
+			}
+
+			// Fallback: other assemblies currently in the AppDomain
+			foreach (var asm in AppDomain.CurrentDomain.GetAssemblies())
+			{
+				if (asm == baseType.Assembly || asm.IsDynamic) continue;
+
+				Type[] types;
+				try { types = asm.GetTypes(); }
+				catch { continue; }
+
+				foreach (var t in types)
+				{
+					if (t.IsClass && !t.IsAbstract && baseType.IsAssignableFrom(t))
+						yield return t;
+				}
+			}
 		}
 
 		#endregion
