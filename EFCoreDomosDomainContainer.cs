@@ -192,7 +192,7 @@ namespace Grammophone.Domos.DataAccess.EntityFrameworkCore
 			#region FundsTransferRequestGroup
 
 			modelBuilder.Entity<FundsTransferRequestGroup>()
-				.ComplexProperty(ftrg => ftrg.EncryptedBankAccountInfo);
+				.ComplexProperty(ftrg => ftrg.EncryptedBankAccountInfo).IsRequired();
 
 			// Composite index (including owner properties)
 			/* The following has no way to work in EF Core. Make a migration to add it */

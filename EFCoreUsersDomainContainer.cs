@@ -264,6 +264,10 @@ namespace Grammophone.Domos.DataAccess.EntityFrameworkCore
 				.HasIndex(bs => bs.FirstSignInOn);
 
 			modelBuilder.Entity<BrowserSession>()
+				.Navigation(bs => bs.IPAddresses)
+				.HasField("ipAddresses");
+
+			modelBuilder.Entity<BrowserSession>()
 				.HasIndex(bs => new { bs.UserID, bs.LastSeenOn });
 
 			modelBuilder.Entity<BrowserSession>()
