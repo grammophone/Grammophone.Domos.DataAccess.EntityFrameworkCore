@@ -152,6 +152,9 @@ namespace Grammophone.Domos.DataAccess.EntityFrameworkCore
 
 			#region User
 
+			modelBuilder.Entity<U>().ToTable("Users");
+			modelBuilder.Entity<User>().ToTable("Users");
+
 			modelBuilder.Entity<U>()
 				.HasIndex(u => u.Email)
 				.IsUnique()
