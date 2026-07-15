@@ -241,6 +241,17 @@ namespace Grammophone.Domos.DataAccess.EntityFrameworkCore
 				.HasDatabaseName("IX_FundsTransferBatchMessage_GUID");
 
 			#endregion
+
+			#region StateTransition
+
+			/* Restore the funds transfer event relation which was ignored by the base implementation, as this domain can support accounting entities. */
+			modelBuilder.Entity<BST>()
+				.HasOne(st => st.FundsTransferEvent)
+				.WithMany()
+				.HasForeignKey(st => st.FundsTransferEventID)
+				.IsRequired(false);
+
+			#endregion
 		}
 
 		#endregion

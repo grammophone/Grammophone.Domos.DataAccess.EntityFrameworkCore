@@ -107,6 +107,14 @@ namespace Grammophone.Domos.DataAccess.EntityFrameworkCore
 				.HasDatabaseName("IX_StatePath_CodeName");
 
 			#endregion
+
+			#region StateTransition
+
+			/* Ignore the funds transfer event relation when no accounting is supported. */
+			modelBuilder.Entity<BST>().Ignore(st => st.FundsTransferEventID);
+			modelBuilder.Entity<BST>().Ignore(st => st.FundsTransferEvent);
+
+			#endregion
 		}
 
 		#endregion
