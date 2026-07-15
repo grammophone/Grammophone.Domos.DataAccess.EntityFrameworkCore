@@ -110,11 +110,21 @@ namespace Grammophone.Domos.DataAccess.EntityFrameworkCore
 
 			#region StateTransition
 
-			/* Ignore the funds transfer event relation when no accounting is supported. */
-			modelBuilder.Entity<BST>().Ignore(st => st.FundsTransferEventID);
-			modelBuilder.Entity<BST>().Ignore(st => st.FundsTransferEvent);
+			ConfigureStateTransition(modelBuilder);
 
 			#endregion
+		}
+
+		/// <summary>
+		/// Configures the 'FundsTransferEvent' navigation propoerty of StateTransition
+		/// to be ignored, as no accounting is supported in this base domain container.
+		/// </summary>
+		protected virtual void ConfigureStateTransition(ModelBuilder modelBuilder)
+		{
+			/* Ignore the funds transfer event relation when no accounting is supported. */
+
+			modelBuilder.Entity<BST>().Ignore(st => st.FundsTransferEventID);
+			modelBuilder.Entity<BST>().Ignore(st => st.FundsTransferEvent);
 		}
 
 		#endregion
