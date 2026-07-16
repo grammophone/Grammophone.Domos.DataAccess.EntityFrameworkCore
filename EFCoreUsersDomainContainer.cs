@@ -122,14 +122,10 @@ namespace Grammophone.Domos.DataAccess.EntityFrameworkCore
 					.HasOne(nameof(ITrackingEntity<TU>.CreatorUser))
 					.WithMany();
 
-				entityType.FindNavigation(nameof(ITrackingEntity<TU>.CreatorUser)).SetPropertyAccessMode(PropertyAccessMode.Property);
-
 				// Same for LastModifierUser.
 				modelBuilder.Entity(clrType)
 					.HasOne(nameof(ITrackingEntity<TU>.LastModifierUser))
 					.WithMany();
-
-				entityType.FindNavigation(nameof(ITrackingEntity<TU>.LastModifierUser)).SetPropertyAccessMode(PropertyAccessMode.Property);
 
 				// Do the same for IUserTrackingEntity<U>, if implemented.
 				if (typeof(IUserTrackingEntity<TU>).IsAssignableFrom(clrType))
@@ -137,8 +133,6 @@ namespace Grammophone.Domos.DataAccess.EntityFrameworkCore
 					modelBuilder.Entity(clrType)
 						.HasOne(nameof(IUserTrackingEntity<TU>.OwningUser))
 						.WithMany();
-
-					entityType.FindNavigation(nameof(IUserTrackingEntity<TU>.OwningUser)).SetPropertyAccessMode(PropertyAccessMode.Property);
 				}
 			}
 		}
@@ -148,12 +142,11 @@ namespace Grammophone.Domos.DataAccess.EntityFrameworkCore
 		{
 			base.OnModelCreating(modelBuilder);
 
-			modelBuilder.UsePropertyAccessMode(PropertyAccessMode.Property);
-
 			#region User
 
+			modelBuilder.Ignore<User>();
+
 			modelBuilder.Entity<U>().ToTable("Users");
-			modelBuilder.Entity<User>().ToTable("Users");
 
 			modelBuilder.Entity<U>()
 				.HasIndex(u => u.Email)
@@ -169,19 +162,23 @@ namespace Grammophone.Domos.DataAccess.EntityFrameworkCore
 				.HasIndex(u => u.CreationDate)
 				.HasDatabaseName("IX_User_CreationDate");
 
-			modelBuilder.Entity<User>()
+			modelBuilder.Entity<U>()
 				.HasMany(u => u.Roles)
 				.WithMany()
-				.UsingEntity(j => j.ToTable("UsersToRoles"));
+				.UsingEntity<Dictionary<string, object>>("UsersToRoles",
+					l => l.HasOne<Role>().WithMany().HasForeignKey("Role_ID"),
+					r => r.HasOne<U>().WithMany().HasForeignKey("User_ID"));
 
-			modelBuilder.Entity<User>()
-				.HasMany(u => u.Dispositions)
-				.WithOne(d => d.OwningUser)
+			modelBuilder.Entity(typeof(U))
+				.HasMany(nameof(User.Dispositions))
+				.WithOne(nameof(Disposition.OwningUser))
+				.HasForeignKey(nameof(Disposition.OwningUserID))
 				.OnDelete(DeleteBehavior.Cascade);
 
-			modelBuilder.Entity<User>()
-				.HasMany(u => u.Registrations)
-				.WithOne(r => r.User)
+			modelBuilder.Entity(typeof(U))
+				.HasMany(nameof(User.Registrations))
+				.WithOne(nameof(Registration.User))
+				.HasForeignKey(nameof(Registration.UserID))
 				.OnDelete(DeleteBehavior.Cascade);
 
 			#endregion
@@ -189,12 +186,14 @@ namespace Grammophone.Domos.DataAccess.EntityFrameworkCore
 			#region Dispositions
 
 			modelBuilder.Entity<Disposition>()
-				.HasOne(d => d.CreatorUser)
-				.WithMany();
+				.HasOne(typeof(U), nameof(Disposition.CreatorUser))
+				.WithMany()
+				.HasForeignKey(nameof(Disposition.CreatorUserID));
 
 			modelBuilder.Entity<Disposition>()
-				.HasOne(d => d.LastModifierUser)
-				.WithMany();
+				.HasOne(typeof(U), nameof(Disposition.LastModifierUser))
+				.WithMany()
+				.HasForeignKey(nameof(Disposition.LastModifierUserID));
 
 			#endregion
 
@@ -236,9 +235,9 @@ namespace Grammophone.Domos.DataAccess.EntityFrameworkCore
 				.HasIndex(c => c.CredentialId);
 
 			modelBuilder.Entity<WebAuthnCredential>()
-				.HasOne(c => c.Owner)
-				.WithMany(u => u.WebAuthnCredentials)
-				.HasForeignKey(c => c.OwnerID);
+				.HasOne(typeof(U), nameof(WebAuthnCredential.Owner))
+				.WithMany(nameof(User.WebAuthnCredentials))
+				.HasForeignKey(nameof(WebAuthnCredential.OwnerID));
 
 			#endregion
 
@@ -269,6 +268,11 @@ namespace Grammophone.Domos.DataAccess.EntityFrameworkCore
 			modelBuilder.Entity<BrowserSession>()
 				.Navigation(bs => bs.IPAddresses)
 				.HasField("ipAddresses");
+
+			modelBuilder.Entity<BrowserSession>()
+				.HasOne(typeof(U), nameof(BrowserSession.User))
+				.WithMany(nameof(User.Sessions))
+				.HasForeignKey(nameof(BrowserSession.UserID));
 
 			modelBuilder.Entity<BrowserSession>()
 				.HasIndex(bs => new { bs.UserID, bs.LastSeenOn });
