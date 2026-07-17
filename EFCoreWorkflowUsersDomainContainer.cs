@@ -64,23 +64,10 @@ namespace Grammophone.Domos.DataAccess.EntityFrameworkCore
 
 		#region Protected methods
 
-		/// <summary>
-		/// Enable lazy loading and change tracking.
-		/// </summary>
-		protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder) 
-		{
-			base.OnConfiguring(optionsBuilder);
-
-			optionsBuilder.UseLazyLoadingProxies();
-			optionsBuilder.UseChangeTrackingProxies();
-		}
-
 		/// <inheritdoc/>
 		protected override void OnModelCreating(ModelBuilder modelBuilder)
 		{
 			base.OnModelCreating(modelBuilder);
-
-			modelBuilder.HasChangeTrackingStrategy(ChangeTrackingStrategy.ChangingAndChangedNotifications);
 
 			#region WorkflowGraph
 
