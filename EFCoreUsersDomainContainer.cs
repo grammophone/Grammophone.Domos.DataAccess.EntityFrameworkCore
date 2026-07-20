@@ -23,9 +23,8 @@ namespace Grammophone.Domos.DataAccess.EntityFrameworkCore
 		/// Create.
 		/// </summary>
 		/// <param name="options">The context options.</param>
-		/// <param name="useChangeTracking">If true, enable EF Core change-tracking proxies.</param>
-		public EFCoreUsersDomainContainer(DbContextOptions options, bool useChangeTracking = true)
-			: base(options, useChangeTracking)
+		public EFCoreUsersDomainContainer(DbContextOptions options)
+			: base(options)
 		{
 		}
 
@@ -34,9 +33,8 @@ namespace Grammophone.Domos.DataAccess.EntityFrameworkCore
 		/// </summary>
 		/// <param name="options">The context options.</param>
 		/// <param name="transactionMode">The transaction behavior.</param>
-		/// <param name="useChangeTracking">If true, enable EF Core change-tracking proxies.</param>
-		public EFCoreUsersDomainContainer(DbContextOptions options, TransactionMode transactionMode, bool useChangeTracking = true)
-			: base(options, transactionMode, useChangeTracking)
+		public EFCoreUsersDomainContainer(DbContextOptions options, TransactionMode transactionMode)
+			: base(options, transactionMode)
 		{
 		}
 
@@ -145,15 +143,12 @@ namespace Grammophone.Domos.DataAccess.EntityFrameworkCore
 			base.OnConfiguring(optionsBuilder);
 
 			optionsBuilder.UseLazyLoadingProxies();
-			optionsBuilder.UseChangeTrackingProxies();
 		}
 
 		/// <inheritdoc/>
 		protected override void OnModelCreating(ModelBuilder modelBuilder)
 		{
 			base.OnModelCreating(modelBuilder);
-
-			modelBuilder.HasChangeTrackingStrategy(ChangeTrackingStrategy.ChangingAndChangedNotificationsWithOriginalValues);
 
 			#region User
 
@@ -178,9 +173,15 @@ namespace Grammophone.Domos.DataAccess.EntityFrameworkCore
 			modelBuilder.Entity<U>()
 				.HasMany(u => u.Roles)
 				.WithMany()
-				.UsingEntity<Dictionary<string, object>>("UsersToRoles",
-					l => l.HasOne<Role>().WithMany().HasForeignKey("Role_ID"),
-					r => r.HasOne<U>().WithMany().HasForeignKey("User_ID"));
+				.UsingEntity<ManyToMany<Role, long, U, long>>(
+					"UsersToRoles",
+					l => l.HasOne(mm => mm.Left).WithMany().HasForeignKey(mm => mm.LeftID),
+					r => r.HasOne(mm => mm.Right).WithMany().HasForeignKey(mm => mm.RightID),
+					j =>
+					{
+						j.Property(mm => mm.LeftID).HasColumnName("Role_ID");
+						j.Property(mm => mm.RightID).HasColumnName("User_ID");
+					});
 
 			modelBuilder.Entity(typeof(U))
 				.HasMany(nameof(User.Dispositions))

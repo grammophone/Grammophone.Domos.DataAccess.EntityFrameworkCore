@@ -18,16 +18,16 @@ namespace Grammophone.Domos.DataAccess.EntityFrameworkCore
 		/// <summary>
 		/// Create.
 		/// </summary>
-		public EFCoreWorkflowUsersDomainContainer(DbContextOptions options, bool useChangeTracking = true)
-			: base(options, useChangeTracking)
+		public EFCoreWorkflowUsersDomainContainer(DbContextOptions options)
+			: base(options)
 		{
 		}
 
 		/// <summary>
 		/// Create.
 		/// </summary>
-		public EFCoreWorkflowUsersDomainContainer(DbContextOptions options, TransactionMode transactionMode, bool useChangeTracking = true)
-			: base(options, transactionMode, useChangeTracking)
+		public EFCoreWorkflowUsersDomainContainer(DbContextOptions options, TransactionMode transactionMode)
+			: base(options, transactionMode)
 		{
 		}
 

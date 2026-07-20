@@ -22,16 +22,16 @@ namespace Grammophone.Domos.DataAccess.EntityFrameworkCore
 		/// <summary>
 		/// Create.
 		/// </summary>
-		public EFCoreDomosDomainContainer(DbContextOptions options, bool useChangeTracking = true)
-			: base(options, useChangeTracking)
+		public EFCoreDomosDomainContainer(DbContextOptions options)
+			: base(options)
 		{
 		}
 
 		/// <summary>
 		/// Create.
 		/// </summary>
-		public EFCoreDomosDomainContainer(DbContextOptions options, TransactionMode transactionMode, bool useChangeTracking = true)
-			: base(options, transactionMode, useChangeTracking)
+		public EFCoreDomosDomainContainer(DbContextOptions options, TransactionMode transactionMode)
+			: base(options, transactionMode)
 		{
 		}
 
@@ -281,16 +281,16 @@ namespace Grammophone.Domos.DataAccess.EntityFrameworkCore
 		/// <summary>
 		/// Create.
 		/// </summary>
-		public EFCoreDomosDomainContainer(DbContextOptions options, bool useChangeTracking = true)
-			: base(options, useChangeTracking)
+		public EFCoreDomosDomainContainer(DbContextOptions options)
+			: base(options)
 		{
 		}
 
 		/// <summary>
 		/// Create.
 		/// </summary>
-		public EFCoreDomosDomainContainer(DbContextOptions options, TransactionMode transactionMode, bool useChangeTracking = true)
-			: base(options, transactionMode, useChangeTracking)
+		public EFCoreDomosDomainContainer(DbContextOptions options, TransactionMode transactionMode)
+			: base(options, transactionMode)
 		{
 		}
 
@@ -336,10 +336,6 @@ namespace Grammophone.Domos.DataAccess.EntityFrameworkCore
 			modelBuilder.Entity<I>()
 				.HasIndex(i => i.DueDate)
 				.HasDatabaseName("IX_Invoice_DueDate");
-
-			modelBuilder.Entity<I>()
-				.HasMany(i => i.ServicingFundsTransferRequests)
-				.WithMany();
 
 			modelBuilder.Entity<I>()
 				.HasMany(i => i.Lines)
