@@ -109,28 +109,28 @@ namespace Grammophone.Domos.DataAccess.EntityFrameworkCore
 				var clrType = entityType.ClrType;
 				if (clrType == null) continue;
 
-				// Only configure for concrete mapped types.
-				if (clrType.IsAbstract) continue;
-
 				if (!typeof(ITrackingEntity<TU>).IsAssignableFrom(clrType)) continue;
 
 				// Look for the navigation properties declared on Tracking* base classes.
 				// If CreatorUser navigation exists and is not yet backed by a relationship, configure it.
 				modelBuilder.Entity(clrType)
 					.HasOne(nameof(ITrackingEntity<TU>.CreatorUser))
-					.WithMany();
+					.WithMany()
+					.OnDelete(DeleteBehavior.NoAction);
 
 				// Same for LastModifierUser.
 				modelBuilder.Entity(clrType)
 					.HasOne(nameof(ITrackingEntity<TU>.LastModifierUser))
-					.WithMany();
+					.WithMany()
+					.OnDelete(DeleteBehavior.NoAction);
 
 				// Do the same for IUserTrackingEntity<U>, if implemented.
 				if (typeof(IUserTrackingEntity<TU>).IsAssignableFrom(clrType))
 				{
 					modelBuilder.Entity(clrType)
 						.HasOne(nameof(IUserTrackingEntity<TU>.OwningUser))
-						.WithMany();
+						.WithMany()
+						.OnDelete(DeleteBehavior.NoAction);
 				}
 			}
 		}
@@ -202,12 +202,14 @@ namespace Grammophone.Domos.DataAccess.EntityFrameworkCore
 			modelBuilder.Entity<Disposition>()
 				.HasOne(typeof(U), nameof(Disposition.CreatorUser))
 				.WithMany()
-				.HasForeignKey(nameof(Disposition.CreatorUserID));
+				.HasForeignKey(nameof(Disposition.CreatorUserID))
+				.OnDelete(DeleteBehavior.NoAction);
 
 			modelBuilder.Entity<Disposition>()
 				.HasOne(typeof(U), nameof(Disposition.LastModifierUser))
 				.WithMany()
-				.HasForeignKey(nameof(Disposition.LastModifierUserID));
+				.HasForeignKey(nameof(Disposition.LastModifierUserID))
+				.OnDelete(DeleteBehavior.NoAction);
 
 			#endregion
 
