@@ -173,7 +173,7 @@ namespace Grammophone.Domos.DataAccess.EntityFrameworkCore
 			modelBuilder.Entity<U>()
 				.HasMany(u => u.Roles)
 				.WithMany()
-				.UsingEntity<ManyToMany<Role, long, U, long>>(
+				.UsingEntity<ImplicitManyToMany<Role, long, U, long>>(
 					"UsersToRoles",
 					l => l.HasOne(mm => mm.Left).WithMany().HasForeignKey(mm => mm.LeftID),
 					r => r.HasOne(mm => mm.Right).WithMany().HasForeignKey(mm => mm.RightID),
