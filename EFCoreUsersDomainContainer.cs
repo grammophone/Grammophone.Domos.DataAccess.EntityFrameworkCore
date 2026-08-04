@@ -244,6 +244,13 @@ namespace Grammophone.Domos.DataAccess.EntityFrameworkCore
 
 			#region WebAuthnCredential
 
+			// EF6 cannot map unsigned CLR types, so WebAuthnCredential.SignatureCounter has always been
+			// silently unmapped there and the EF6 migrations never created a column for it. EF Core does
+			// map uint, so left alone it would select a SignatureCounter column that does not exist in
+			// the database. Ignore it, so that both providers agree on the same schema.
+			modelBuilder.Entity<WebAuthnCredential>()
+				.Ignore(c => c.SignatureCounter);
+
 			modelBuilder.Entity<WebAuthnCredential>()
 				.HasIndex(c => c.UserHandle);
 
