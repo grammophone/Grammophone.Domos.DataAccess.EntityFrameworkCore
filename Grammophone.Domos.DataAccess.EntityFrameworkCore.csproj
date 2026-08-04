@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <ProjectGuid>{7D26F72A-AB49-4A0C-B6D6-00A68F07AC72}</ProjectGuid>
     <TargetFramework>net8.0</TargetFramework>
