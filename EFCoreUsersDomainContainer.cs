@@ -95,8 +95,6 @@ namespace Grammophone.Domos.DataAccess.EntityFrameworkCore
 		/// Scans the model for all entities exposing CreatorUser / LastModifierUser navigation properties
 		/// (from <see cref="TrackingEntity{U}"/>, <see cref="UserTrackingEntity{U}"/>, <see cref="Disposition"/> etc.) and configures the
 		/// one-sided relationships. This replaces hundreds of manual HasOne lines that EF Core does not infer.
-		/// Call this early in OnModelCreating (after base.OnModelCreating) so that later global
-		/// SetDefaultDeleteBehavior can adjust any cascades.
 		/// </summary>
 		/// <typeparam name="TU">The type parameter for finding <see cref="ITrackingEntity{TU}"/> and <see cref="IUserTrackingEntity{TU}"/> implmenetatoins.</typeparam>
 		protected static void ConfigureAllTrackingEntitiesNavigations<TU>(ModelBuilder modelBuilder)
